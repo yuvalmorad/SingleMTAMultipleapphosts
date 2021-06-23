@@ -1,0 +1,146 @@
+_schema-version: "3.1"
+ID: SingleMTAMultipleapphosts
+description: SingleMTAMultipleapphosts application
+version: 1.0.0-SNAPSHOT
+modules:
+- name: SingleMTAMultipleapphosts-srv
+  type: java
+  path: srv
+  properties:
+    SPRING_PROFILES_ACTIVE: cloud
+  requires:
+  - name: SingleMTAMultipleapphosts-db
+  - name: uaa_SingleMTAMultipleapphosts
+  provides:
+  - name: srv-api
+    properties:
+      srv-url: ${default-url}
+  build-parameters:
+    build-result: target/*-exec.[wj]ar
+    builder: custom
+    commands:
+    - mvn clean package
+- name: SingleMTAMultipleapphosts-db-deployer
+  type: hdb
+  path: db
+  requires:
+  - name: SingleMTAMultipleapphosts-db
+  parameters:
+    buildpack: nodejs_buildpack
+- name: singlemtamultipleapphosts-approuter
+  type: approuter.nodejs
+  path: singlemtamultipleapphosts-approuter
+  requires:
+  - name: SingleMTAMultipleapphosts_html_repo_runtime
+  - name: uaa_SingleMTAMultipleapphosts
+  - name: srv-api
+    group: destinations
+    properties:
+      forwardAuthToken: true
+      name: srv-api
+      url: ~{srv-url}
+  parameters:
+    disk-quota: 256M
+    memory: 256M
+- name: SingleMTAMultipleapphosts_ui_deployer_ui1
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: SingleMTAMultipleapphosts_html_repo_host_ui1
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources_ui1
+    requires:
+    - artifacts:
+      - nsui1.zip
+      name: nsui1
+      target-path: resources_ui1/
+- name: SingleMTAMultipleapphosts_ui_deployer_ui2
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: SingleMTAMultipleapphosts_html_repo_host_ui2
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources_ui2
+    requires:
+    - artifacts:
+      - nsui2.zip
+      name: nsui2
+      target-path: resources_ui2/
+    - artifacts:
+      - nsui3.zip
+      name: nsui3
+      target-path: resources_ui2/
+
+- name: nsui1
+  type: html5
+  path: app/ui1
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+- name: nsui2
+  type: html5
+  path: app/ui2
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+- name: nsui3
+  type: html5
+  path: app/ui3
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+resources:
+- name: SingleMTAMultipleapphosts-db
+  type: com.sap.xs.hdi-container
+  parameters:
+    service: hana
+    service-plan: hdi-shared
+  properties:
+    hdi-service-name: ${service-name}
+- name: SingleMTAMultipleapphosts_html_repo_runtime
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-plan: app-runtime
+- name: uaa_SingleMTAMultipleapphosts
+  type: org.cloudfoundry.managed-service
+  parameters:
+    path: ./xs-security.json
+    service: xsuaa
+    service-name: SingleMTAMultipleapphosts-xsuaa-service
+    service-plan: application
+- name: SingleMTAMultipleapphosts_html_repo_host_ui1
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-plan: app-host
+- name: SingleMTAMultipleapphosts_html_repo_host_ui2
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-plan: app-host
+parameters:
+  deploy_mode: html5-repo
+  enable-parallel-deployments: true
+build-parameters:
+  before-all:
+  - builder: custom
+    commands:
+    - npm install --production
+    - npx -p @sap/cds-dk cds build --production
