@@ -2,8 +2,9 @@ sap.ui.define([
 	"sap/ui/core/UIComponent",
 	"sap/ui/Device",
 	"./model/models",
-	"./controller/ErrorHandler"
-], function (UIComponent, Device, models, ErrorHandler) {
+	"./controller/ErrorHandler",
+	"ns/myui3/reuseUtil" //Loaded from other ui, url is registered via resourceRoots
+], function (UIComponent, Device, models, ErrorHandler, reuseUtil) {
 	"use strict";
 
 	return UIComponent.extend("ns.ui2.Component", {
@@ -30,6 +31,8 @@ sap.ui.define([
 
 			// create the views based on the url/hash
 			this.getRouter().initialize();
+
+			reuseUtil();
 		},
 
 		/**

@@ -1,9 +1,10 @@
 sap.ui.define([
+	"sap/ui/core/Component",
 	"sap/ui/core/UIComponent",
 	"sap/ui/Device",
 	"./model/models",
 	"./controller/ErrorHandler"
-], function (UIComponent, Device, models, ErrorHandler) {
+], function (Component, UIComponent, Device, models, ErrorHandler) {
 	"use strict";
 
 	return UIComponent.extend("ns.ui1.Component", {
@@ -30,6 +31,21 @@ sap.ui.define([
 
 			// create the views based on the url/hash
 			this.getRouter().initialize();
+
+			let sComponent = "ns.myui2";
+			let sUrl = "/"+sComponent.replace(/\./gi,"");
+			Component.create({
+				name: sComponent,
+				url: sUrl
+			}).then(function(oComponent) {
+				var oNewContainer;                
+				oNewContainer = new ComponentContainer({
+					id : oComponent.getId() + "--container"
+				});
+				oNewContainer.setComponent(oComponent);
+				  
+				this.byId("viewId").setContent(oNewContainer);
+			})
 		},
 
 		/**

@@ -47,6 +47,9 @@
 			"async": true,
 			"id": "app"
 		},
+		"resourceRoots": {
+            "ns.myui3": "../nsmyui3"
+        },
 
 		"dependencies": {
 			"minUI5Version": "1.66.0",
